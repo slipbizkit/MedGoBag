@@ -73,6 +73,16 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
 
       <div className="row g-3">
         <div className="col-12 col-sm-6">
+          <label className="form-label fw-semibold">Brand Name</label>
+          <input
+            className="form-control"
+            value={form.brand_name}
+            onChange={set('brand_name')}
+            placeholder="e.g. Biogesic"
+          />
+        </div>
+
+        <div className="col-12 col-sm-6">
           <label className="form-label fw-semibold">
             Generic Name <span className="text-danger">*</span>
           </label>
@@ -82,16 +92,6 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
             onChange={set('generic_name')}
             placeholder="e.g. Paracetamol"
             required
-          />
-        </div>
-
-        <div className="col-12 col-sm-6">
-          <label className="form-label fw-semibold">Brand Name</label>
-          <input
-            className="form-control"
-            value={form.brand_name}
-            onChange={set('brand_name')}
-            placeholder="e.g. Biogesic"
           />
         </div>
 

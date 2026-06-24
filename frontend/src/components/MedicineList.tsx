@@ -188,8 +188,8 @@ export default function MedicineList() {
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>
-                <th>Generic Name</th>
                 <th>Brand Name</th>
+                <th>Generic Name</th>
                 <th>Expires</th>
                 <th className="d-none d-md-table-cell">Used For</th>
                 <th className="d-none d-md-table-cell">Dosage</th>
@@ -203,8 +203,8 @@ export default function MedicineList() {
                 const expired = exp < new Date();
                 return (
                   <tr key={med.id}>
-                    <td className="fw-semibold">{med.generic_name}</td>
-                    <td className="text-muted">{med.brand_name ?? <span className="text-muted fst-italic small">—</span>}</td>
+                    <td className="fw-semibold">{med.brand_name ?? <span className="text-muted fst-italic small">—</span>}</td>
+                    <td className="text-muted">{med.generic_name}</td>
                     <td>
                       <span className={`badge ${expired ? 'bg-danger' : soon ? 'bg-warning text-dark' : 'bg-success'}`}>
                         {exp.toLocaleDateString()}
