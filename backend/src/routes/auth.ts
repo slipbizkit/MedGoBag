@@ -25,6 +25,38 @@ router.get('/check-email', async (req: Request, res: Response) => {
   return res.json({ available: rows.length === 0 });
 });
 
+// ─── Pre-login: verify username + password only (step 1 of 2-step login) ────
+router.post(
+  '/pre-login',
+  [
+    body('username').trim().notEmpty().withMessage('Username is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+
+    const { username, password } = req.body as { username: string; password: string };
+
+    try {
+      const [user] = (await sql`
+        SELECT id, password_hash, is_active FROM users WHERE username = ${username}
+      `) as { id: number; password_hash: string; is_active: boolean }[];
+
+      if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+      if (!user.is_active) return res.status(403).json({ error: 'Account is disabled' });
+
+      const passwordOk = await bcrypt.compare(password, user.password_hash);
+      if (!passwordOk) return res.status(401).json({ error: 'Invalid username or password' });
+
+      return res.json({ valid: true });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 // ─── Register ────────────────────────────────────────────────────────────────
 router.post(
   '/register',

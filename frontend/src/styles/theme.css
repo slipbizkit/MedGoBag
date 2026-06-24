@@ -1,3 +1,58 @@
+/* ── Login step slide animations ────────────────────────────────────────────── */
+@keyframes stepExitLeft {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(-32px); opacity: 0; }
+}
+@keyframes stepEnterRight {
+  from { transform: translateX(32px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes stepEnterLeft {
+  from { transform: translateX(-32px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.step-exit  { animation: stepExitLeft   0.22s ease forwards; }
+.step-enter { animation: stepEnterRight 0.26s ease forwards; }
+.step-enter-back { animation: stepEnterLeft 0.26s ease forwards; }
+
+/* ── OTP boxes ───────────────────────────────────────────────────────────────── */
+.otp-box {
+  width: 46px;
+  height: 54px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 2px solid var(--bs-border-color);
+  background: transparent;
+  color: var(--bs-body-color);
+  caret-color: transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -moz-appearance: textfield;
+}
+.otp-box::-webkit-outer-spin-button,
+.otp-box::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.otp-box:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+.otp-box.filled {
+  border-color: #3b82f6;
+}
+[data-bs-theme="dark"] .otp-box {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: #1f2937;
+  color: #f3f4f6;
+}
+[data-bs-theme="dark"] .otp-box:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+[data-bs-theme="dark"] .otp-box.filled {
+  border-color: #60a5fa;
+}
+
 /* ── Theme transition ───────────────────────────────────────────────────────── */
 *,
 *::before,
