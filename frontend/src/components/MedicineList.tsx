@@ -65,29 +65,37 @@ export default function MedicineList() {
     }
   }
 
-  function fmtDays(n: number): string {
-    if (n <= 0) return '0d';
-    const y = Math.floor(n / 365);
-    const rem = n - y * 365;
-    const mo = Math.floor(rem / 30);
-    const d = rem - mo * 30;
+  function calendarDiff(from: Date, to: Date) {
+    let years  = to.getFullYear() - from.getFullYear();
+    let months = to.getMonth()    - from.getMonth();
+    let days   = to.getDate()     - from.getDate();
+    if (days < 0) {
+      months -= 1;
+      days += new Date(to.getFullYear(), to.getMonth(), 0).getDate();
+    }
+    if (months < 0) { years -= 1; months += 12; }
+    return { years, months, days };
+  }
+
+  function fmtDiff(y: number, mo: number, d: number): string {
     return [y > 0 && `${y}y`, mo > 0 && `${mo}m`, (d > 0 || (!y && !mo)) && `${d}d`]
       .filter(Boolean).join(' ');
   }
 
   function handleView(med: Medicine) {
-    const exp = new Date(med.expiration_date);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const days = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    const expired = days < 0;
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const exp = new Date(med.expiration_date); exp.setHours(0, 0, 0, 0);
+    const totalDays = Math.round((exp.getTime() - now.getTime()) / 86_400_000);
+    const expired = totalDays < 0;
+    const diff = expired ? calendarDiff(exp, now) : calendarDiff(now, exp);
+    const duration = fmtDiff(diff.years, diff.months, diff.days);
     const expiryLabel = expired
-      ? `<span style="color:#dc3545;font-weight:600;">Expired ${fmtDays(Math.abs(days))} ago (${exp.toLocaleDateString()})</span>`
-      : days === 0
+      ? `<span style="color:#dc3545;font-weight:600;">Expired ${duration} ago (${exp.toLocaleDateString()})</span>`
+      : totalDays === 0
       ? `<span style="color:#dc3545;font-weight:600;">Expires today</span>`
-      : days <= 30
-      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${fmtDays(days)} left)</span>`
-      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${fmtDays(days)} left)</span>`;
+      : totalDays <= 30
+      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`
+      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`;
 
     Swal.fire({
       title: med.generic_name,
