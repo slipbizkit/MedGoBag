@@ -10,6 +10,21 @@ import { DbUser } from '../types';
 
 const router = Router();
 
+// ─── Availability checks (debounced from the frontend) ───────────────────────
+router.get('/check-username', async (req: Request, res: Response) => {
+  const username = String(req.query.username ?? '').trim();
+  if (username.length < 3) return res.json({ available: false });
+  const rows = await sql`SELECT id FROM users WHERE username = ${username}`;
+  return res.json({ available: rows.length === 0 });
+});
+
+router.get('/check-email', async (req: Request, res: Response) => {
+  const email = String(req.query.email ?? '').trim().toLowerCase();
+  if (!email.includes('@')) return res.json({ available: false });
+  const rows = await sql`SELECT id FROM users WHERE email = ${email}`;
+  return res.json({ available: rows.length === 0 });
+});
+
 // ─── Register ────────────────────────────────────────────────────────────────
 router.post(
   '/register',

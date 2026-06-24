@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import client from '../api/client';
+import { useAvailability, AvailabilityStatus } from '../hooks/useAvailability';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -8,12 +9,27 @@ interface Props {
 }
 
 const PASSWORD_CHECKS = [
-  { label: 'At least 10 characters',      test: (p: string) => p.length >= 10 },
-  { label: 'One uppercase letter (A–Z)',   test: (p: string) => /[A-Z]/.test(p) },
-  { label: 'One lowercase letter (a–z)',   test: (p: string) => /[a-z]/.test(p) },
-  { label: 'One number (0–9)',             test: (p: string) => /[0-9]/.test(p) },
-  { label: 'One symbol (!@#$%^&*…)',       test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  { label: 'At least 10 characters',    test: (p: string) => p.length >= 10 },
+  { label: 'One uppercase letter (A–Z)', test: (p: string) => /[A-Z]/.test(p) },
+  { label: 'One lowercase letter (a–z)', test: (p: string) => /[a-z]/.test(p) },
+  { label: 'One number (0–9)',           test: (p: string) => /[0-9]/.test(p) },
+  { label: 'One symbol (!@#$%^&*…)',     test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
+
+function AvailabilityHint({ status, takenMsg }: { status: AvailabilityStatus; takenMsg: string }) {
+  if (status === 'idle')      return null;
+  if (status === 'checking')  return <div className="form-text"><span className="spinner-border spinner-border-sm me-1" style={{ width: '0.75rem', height: '0.75rem' }} />Checking…</div>;
+  if (status === 'available') return <div className="form-text text-success">✓ Available</div>;
+  if (status === 'taken')     return <div className="form-text text-danger">✗ {takenMsg}</div>;
+  return <div className="form-text text-warning">Could not verify — will check on submit</div>;
+}
+
+function availabilityClass(status: AvailabilityStatus, value: string, minLen = 3): string {
+  if (value.length < minLen) return '';
+  if (status === 'available') return 'is-valid';
+  if (status === 'taken')     return 'is-invalid';
+  return '';
+}
 
 export default function Register({ theme, toggleTheme }: Props) {
   const navigate = useNavigate();
@@ -27,16 +43,28 @@ export default function Register({ theme, toggleTheme }: Props) {
   const [loading, setLoading]         = useState(false);
   const [touched, setTouched]         = useState(false);
 
+  const usernameStatus = useAvailability(username, '/auth/check-username', 'username', 3);
+  const emailStatus    = useAvailability(email,    '/auth/check-email',    'email',    6);
+
   const checks = PASSWORD_CHECKS.map((c) => ({ ...c, passed: c.test(password) }));
   const allChecksPassed = checks.every((c) => c.passed);
-  const confirmMatch = password === confirm && confirm.length > 0;
+  const confirmMatch    = password === confirm && confirm.length > 0;
+
+  const canSubmit =
+    !loading &&
+    allChecksPassed &&
+    confirmMatch &&
+    usernameStatus === 'available' &&
+    emailStatus    === 'available';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
 
-    if (!allChecksPassed) { setError('Password does not meet all requirements.'); return; }
-    if (!confirmMatch)    { setError('Passwords do not match.'); return; }
+    if (usernameStatus === 'taken') { setError('Username is already taken.'); return; }
+    if (emailStatus    === 'taken') { setError('Email is already registered.'); return; }
+    if (!allChecksPassed)           { setError('Password does not meet all requirements.'); return; }
+    if (!confirmMatch)              { setError('Passwords do not match.'); return; }
 
     setError('');
     setLoading(true);
@@ -46,11 +74,11 @@ export default function Register({ theme, toggleTheme }: Props) {
         username,
         password,
         display_name: displayName,
-        full_name: fullName,
+        full_name:    fullName,
       });
 
       localStorage.setItem('token', data.setupToken);
-      sessionStorage.setItem('otp_qr', data.qrCode);
+      sessionStorage.setItem('otp_qr',     data.qrCode);
       sessionStorage.setItem('otp_secret', data.otpSecret);
       navigate('/otp-setup');
     } catch (err: unknown) {
@@ -120,14 +148,20 @@ export default function Register({ theme, toggleTheme }: Props) {
                 Username <span className="text-danger">*</span>
               </label>
               <input
-                className="form-control"
+                className={`form-control ${availabilityClass(usernameStatus, username)}`}
                 value={username}
                 onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
                 placeholder="e.g. tom_123"
                 autoComplete="username"
                 required
               />
-              <div className="form-text">Letters, numbers, and underscores only. Used to log in.</div>
+              {usernameStatus === 'taken'
+                ? <div className="invalid-feedback d-block">Username is already taken.</div>
+                : <AvailabilityHint status={usernameStatus} takenMsg="Username is already taken." />
+              }
+              {usernameStatus !== 'taken' && usernameStatus === 'idle' && (
+                <div className="form-text">Letters, numbers, and underscores only. Used to log in.</div>
+              )}
             </div>
 
             {/* ── Email ── */}
@@ -137,12 +171,16 @@ export default function Register({ theme, toggleTheme }: Props) {
               </label>
               <input
                 type="email"
-                className="form-control"
+                className={`form-control ${availabilityClass(emailStatus, email, 6)}`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
               />
+              {emailStatus === 'taken'
+                ? <div className="invalid-feedback d-block">Email is already registered.</div>
+                : <AvailabilityHint status={emailStatus} takenMsg="Email is already registered." />
+              }
             </div>
 
             {/* ── Password ── */}
@@ -195,10 +233,12 @@ export default function Register({ theme, toggleTheme }: Props) {
             <button
               type="submit"
               className="btn btn-primary w-100"
-              disabled={loading}
+              disabled={!canSubmit}
             >
-              {loading && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
-              Create Account
+              {loading
+                ? <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />Creating account…</>
+                : 'Create Account'
+              }
             </button>
           </form>
 
