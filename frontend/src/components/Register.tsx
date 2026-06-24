@@ -8,6 +8,8 @@ interface Props {
   toggleTheme: () => void;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const PASSWORD_CHECKS = [
   { label: 'At least 10 characters',    test: (p: string) => p.length >= 10 },
   { label: 'One uppercase letter (A–Z)', test: (p: string) => /[A-Z]/.test(p) },
@@ -43,8 +45,9 @@ export default function Register({ theme, toggleTheme }: Props) {
   const [loading, setLoading]         = useState(false);
   const [touched, setTouched]         = useState(false);
 
-  const usernameStatus = useAvailability(username, '/auth/check-username', 'username', 3);
-  const emailStatus    = useAvailability(email,    '/auth/check-email',    'email',    6);
+  const emailValid     = EMAIL_RE.test(email);
+  const usernameStatus = useAvailability(username,              '/auth/check-username', 'username', 3);
+  const emailStatus    = useAvailability(emailValid ? email : '', '/auth/check-email',  'email',    6);
 
   const checks = PASSWORD_CHECKS.map((c) => ({ ...c, passed: c.test(password) }));
   const allChecksPassed = checks.every((c) => c.passed);
@@ -54,6 +57,7 @@ export default function Register({ theme, toggleTheme }: Props) {
     !loading &&
     allChecksPassed &&
     confirmMatch &&
+    emailValid &&
     usernameStatus === 'available' &&
     emailStatus    === 'available';
 
@@ -171,16 +175,23 @@ export default function Register({ theme, toggleTheme }: Props) {
               </label>
               <input
                 type="email"
-                className={`form-control ${availabilityClass(emailStatus, email, 6)}`}
+                className={`form-control ${
+                  email.length === 0      ? '' :
+                  !emailValid             ? 'is-invalid' :
+                  availabilityClass(emailStatus, email, 6)
+                }`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
               />
-              {emailStatus === 'taken'
-                ? <div className="invalid-feedback d-block">Email is already registered.</div>
-                : <AvailabilityHint status={emailStatus} takenMsg="Email is already registered." />
-              }
+              {email.length > 0 && !emailValid ? (
+                <div className="invalid-feedback d-block">Please enter a valid email.</div>
+              ) : emailStatus === 'taken' ? (
+                <div className="invalid-feedback d-block">Email is already registered.</div>
+              ) : (
+                <AvailabilityHint status={emailStatus} takenMsg="Email is already registered." />
+              )}
             </div>
 
             {/* ── Password ── */}
