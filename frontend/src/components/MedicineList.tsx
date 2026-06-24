@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import client from '../api/client';
 import { Medicine } from '../types';
 import MedicineForm from './MedicineForm';
@@ -39,17 +40,77 @@ export default function MedicineList() {
     await load();
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Delete this medicine?')) return;
-    setDeleting(id);
+  async function handleDelete(med: Medicine) {
+    const result = await Swal.fire({
+      title: 'Delete medicine?',
+      text: `"${med.name}" will be permanently removed.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    setDeleting(med.id);
     try {
-      await client.delete(`/medicines/${id}`);
-      setMedicines((prev) => prev.filter((m) => m.id !== id));
+      await client.delete(`/medicines/${med.id}`);
+      setMedicines((prev) => prev.filter((m) => m.id !== med.id));
     } catch {
       setError('Delete failed');
     } finally {
       setDeleting(null);
     }
+  }
+
+  function handleView(med: Medicine) {
+    const exp = new Date(med.expiration_date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const days = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const expired = days < 0;
+    const expiryLabel = expired
+      ? `<span style="color:#dc3545;font-weight:600;">Expired ${Math.abs(days)}d ago (${exp.toLocaleDateString()})</span>`
+      : days === 0
+      ? `<span style="color:#dc3545;font-weight:600;">Expires today</span>`
+      : days <= 30
+      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${days}d left)</span>`
+      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${days}d left)</span>`;
+
+    Swal.fire({
+      title: med.name,
+      html: `
+        <table style="width:100%;text-align:left;border-collapse:collapse;font-size:0.95rem;">
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;white-space:nowrap;width:40%;">Dosage</td>
+            <td style="padding:6px 0;font-weight:500;">${med.dosage}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;">Used For</td>
+            <td style="padding:6px 0;font-weight:500;">${med.used_for}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;">Expiration</td>
+            <td style="padding:6px 0;">${expiryLabel}</td>
+          </tr>
+          ${med.production_date ? `
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;">Produced</td>
+            <td style="padding:6px 0;font-weight:500;">${new Date(med.production_date).toLocaleDateString()}</td>
+          </tr>` : ''}
+          ${med.description ? `
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;vertical-align:top;">Description</td>
+            <td style="padding:6px 0;">${med.description}</td>
+          </tr>` : ''}
+        </table>
+      `,
+      icon: expired ? 'warning' : 'info',
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#0d6efd',
+    });
   }
 
   function startEdit(med: Medicine) {
@@ -146,19 +207,38 @@ export default function MedicineList() {
                     </td>
                     <td className="d-none d-md-table-cell">{med.dosage}</td>
                     <td className="text-end">
-                      <button
-                        className="btn btn-sm btn-outline-secondary me-1"
-                        onClick={() => startEdit(med)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(med.id)}
-                        disabled={deleting === med.id}
-                      >
-                        {deleting === med.id ? '…' : 'Delete'}
-                      </button>
+                      <div className="dropdown">
+                        <button
+                          className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                          disabled={deleting === med.id}
+                        >
+                          {deleting === med.id ? '…' : 'Actions'}
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <button className="dropdown-item" onClick={() => handleView(med)}>
+                              👁 View
+                            </button>
+                          </li>
+                          <li>
+                            <button className="dropdown-item" onClick={() => startEdit(med)}>
+                              ✏️ Edit
+                            </button>
+                          </li>
+                          <li><hr className="dropdown-divider" /></li>
+                          <li>
+                            <button
+                              className="dropdown-item text-danger"
+                              onClick={() => handleDelete(med)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     </td>
                   </tr>
                 );
