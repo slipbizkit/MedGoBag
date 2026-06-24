@@ -10,27 +10,29 @@ interface Props {
 
 export default function Login({ theme, toggleTheme, onLogin }: Props) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp]           = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const { data } = await client.post('/auth/login', { email, password, token: otp });
+      const { data } = await client.post('/auth/login', { username, password, token: otp });
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
       localStorage.setItem('email', data.email);
+      localStorage.setItem('username', data.username);
+      if (data.displayName) localStorage.setItem('displayName', data.displayName);
       onLogin();
       navigate('/');
     } catch (err: unknown) {
       const msg =
-        err instanceof Error && (err as { response?: { data?: { error?: string } } }).response?.data
-          ?.error;
+        err instanceof Error &&
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error;
       setError(msg || 'Login failed. Check your credentials and OTP.');
     } finally {
       setLoading(false);
@@ -38,7 +40,7 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
       <button
         className="btn btn-outline-secondary btn-sm position-fixed top-0 end-0 m-3"
         onClick={toggleTheme}
@@ -47,26 +49,25 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
+
       <div className="card shadow-sm w-100" style={{ maxWidth: 420 }}>
         <div className="card-body p-4">
           <h4 className="card-title text-center text-primary mb-1">💊 MedGoBag</h4>
           <p className="text-center text-muted small mb-4">Sign in to your account</p>
 
           {error && (
-            <div className="alert alert-danger py-2 small" role="alert">
-              {error}
-            </div>
+            <div className="alert alert-danger py-2 small" role="alert">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="mb-3">
-              <label className="form-label fw-semibold">Email</label>
+              <label className="form-label fw-semibold">Username</label>
               <input
-                type="email"
+                type="text"
                 className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                autoComplete="username"
                 required
               />
             </div>
@@ -87,7 +88,7 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
               <label className="form-label fw-semibold">Authenticator Code</label>
               <input
                 type="text"
-                className="form-control form-control-lg text-center letter-spacing-wide"
+                className="form-control form-control-lg text-center"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="••••••"
@@ -100,9 +101,7 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
             </div>
 
             <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-              {loading && (
-                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
-              )}
+              {loading && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
               Sign In
             </button>
           </form>
@@ -110,9 +109,7 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
           <hr className="my-3" />
           <p className="text-center small mb-0">
             No account?{' '}
-            <Link to="/register" className="text-decoration-none">
-              Register
-            </Link>
+            <Link to="/register" className="text-decoration-none">Register</Link>
           </p>
         </div>
       </div>

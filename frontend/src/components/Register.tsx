@@ -7,40 +7,56 @@ interface Props {
   toggleTheme: () => void;
 }
 
+const PASSWORD_CHECKS = [
+  { label: 'At least 10 characters',      test: (p: string) => p.length >= 10 },
+  { label: 'One uppercase letter (A–Z)',   test: (p: string) => /[A-Z]/.test(p) },
+  { label: 'One lowercase letter (a–z)',   test: (p: string) => /[a-z]/.test(p) },
+  { label: 'One number (0–9)',             test: (p: string) => /[0-9]/.test(p) },
+  { label: 'One symbol (!@#$%^&*…)',       test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+];
+
 export default function Register({ theme, toggleTheme }: Props) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [fullName, setFullName]       = useState('');
+  const [username, setUsername]       = useState('');
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
+  const [confirm, setConfirm]         = useState('');
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(false);
+  const [touched, setTouched]         = useState(false);
+
+  const checks = PASSWORD_CHECKS.map((c) => ({ ...c, passed: c.test(password) }));
+  const allChecksPassed = checks.every((c) => c.passed);
+  const confirmMatch = password === confirm && confirm.length > 0;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (password !== confirm) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
+    setTouched(true);
+
+    if (!allChecksPassed) { setError('Password does not meet all requirements.'); return; }
+    if (!confirmMatch)    { setError('Passwords do not match.'); return; }
 
     setError('');
     setLoading(true);
     try {
-      const { data } = await client.post('/auth/register', { email, password });
+      const { data } = await client.post('/auth/register', {
+        email,
+        username,
+        password,
+        display_name: displayName,
+        full_name: fullName,
+      });
 
-      // Store the setup token temporarily so OTPSetup can call verify-otp-setup
       localStorage.setItem('token', data.setupToken);
       sessionStorage.setItem('otp_qr', data.qrCode);
       sessionStorage.setItem('otp_secret', data.otpSecret);
-
       navigate('/otp-setup');
     } catch (err: unknown) {
       const msg =
-        err instanceof Error && (err as { response?: { data?: { error?: string } } }).response?.data
-          ?.error;
+        err instanceof Error &&
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error;
       setError(msg || 'Registration failed');
     } finally {
       setLoading(false);
@@ -48,7 +64,7 @@ export default function Register({ theme, toggleTheme }: Props) {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+    <div className="d-flex justify-content-center align-items-center py-4" style={{ minHeight: '100vh' }}>
       <button
         className="btn btn-outline-secondary btn-sm position-fixed top-0 end-0 m-3"
         onClick={toggleTheme}
@@ -57,20 +73,68 @@ export default function Register({ theme, toggleTheme }: Props) {
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
-      <div className="card shadow-sm w-100" style={{ maxWidth: 420 }}>
+
+      <div className="card shadow-sm w-100" style={{ maxWidth: 480 }}>
         <div className="card-body p-4">
           <h4 className="card-title text-center text-primary mb-1">💊 MedGoBag</h4>
           <p className="text-center text-muted small mb-4">Create an account</p>
 
           {error && (
-            <div className="alert alert-danger py-2 small" role="alert">
-              {error}
-            </div>
+            <div className="alert alert-danger py-2 small" role="alert">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
+
+            {/* ── What do we call you? ── */}
             <div className="mb-3">
-              <label className="form-label fw-semibold">Email</label>
+              <label className="form-label fw-semibold">
+                What do we call you? <span className="text-danger">*</span>
+              </label>
+              <input
+                className="form-control"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Tom"
+                required
+              />
+              <div className="form-text">This is how we'll greet you in the app.</div>
+            </div>
+
+            {/* ── Full name ── */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Full Name <span className="text-danger">*</span>
+              </label>
+              <input
+                className="form-control"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Thomas Pinalakas"
+                required
+              />
+            </div>
+
+            {/* ── Username ── */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Username <span className="text-danger">*</span>
+              </label>
+              <input
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                placeholder="e.g. tom_123"
+                autoComplete="username"
+                required
+              />
+              <div className="form-text">Letters, numbers, and underscores only. Used to log in.</div>
+            </div>
+
+            {/* ── Email ── */}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Email <span className="text-danger">*</span>
+              </label>
               <input
                 type="email"
                 className="form-control"
@@ -81,35 +145,59 @@ export default function Register({ theme, toggleTheme }: Props) {
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Password</label>
+            {/* ── Password ── */}
+            <div className="mb-2">
+              <label className="form-label fw-semibold">
+                Password <span className="text-danger">*</span>
+              </label>
               <input
                 type="password"
                 className="form-control"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setTouched(true); }}
                 autoComplete="new-password"
                 required
               />
-              <div className="form-text">Minimum 8 characters.</div>
             </div>
 
+            {/* ── Live password checklist ── */}
+            {(touched || password.length > 0) && (
+              <ul className="list-unstyled small mb-3 ps-1">
+                {checks.map((c) => (
+                  <li key={c.label} className={c.passed ? 'text-success' : 'text-danger'}>
+                    {c.passed ? '✓' : '✗'} {c.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* ── Confirm password ── */}
             <div className="mb-4">
-              <label className="form-label fw-semibold">Confirm Password</label>
+              <label className="form-label fw-semibold">
+                Confirm Password <span className="text-danger">*</span>
+              </label>
               <input
                 type="password"
-                className="form-control"
+                className={`form-control ${confirm.length > 0 ? (confirmMatch ? 'is-valid' : 'is-invalid') : ''}`}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 autoComplete="new-password"
                 required
               />
+              {confirm.length > 0 && !confirmMatch && (
+                <div className="invalid-feedback">Passwords do not match.</div>
+              )}
+              {confirmMatch && (
+                <div className="valid-feedback">Passwords match.</div>
+              )}
             </div>
 
-            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-              {loading && (
-                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
-              )}
+            <button
+              type="submit"
+              className="btn btn-primary w-100"
+              disabled={loading}
+            >
+              {loading && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
               Create Account
             </button>
           </form>
@@ -117,9 +205,7 @@ export default function Register({ theme, toggleTheme }: Props) {
           <hr className="my-3" />
           <p className="text-center small mb-0">
             Already have an account?{' '}
-            <Link to="/login" className="text-decoration-none">
-              Sign in
-            </Link>
+            <Link to="/login" className="text-decoration-none">Sign in</Link>
           </p>
         </div>
       </div>

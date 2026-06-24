@@ -7,6 +7,9 @@ export interface JwtPayload {
 export interface DbUser {
   id: number;
   email: string;
+  username: string;
+  display_name: string | null;
+  full_name: string | null;
   password_hash: string;
   role: 'admin' | 'user';
   otp_secret: string;

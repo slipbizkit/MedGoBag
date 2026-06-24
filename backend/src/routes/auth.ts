@@ -11,30 +11,44 @@ import { DbUser } from '../types';
 const router = Router();
 
 // ─── Register ────────────────────────────────────────────────────────────────
-// Creates user + generates TOTP secret + returns QR code for authenticator app.
-// Returns a short-lived setupToken so the client can call /verify-otp-setup.
 router.post(
   '/register',
-  [body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 8 })],
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters')
+      .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username may only contain letters, numbers, and underscores'),
+    body('password').isLength({ min: 10 }).withMessage('Password must be at least 10 characters'),
+    body('display_name').trim().notEmpty().withMessage('Display name is required'),
+    body('full_name').trim().notEmpty().withMessage('Full name is required'),
+  ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password } = req.body as { email: string; password: string };
+    const { email, username, password, display_name, full_name } = req.body as {
+      email: string;
+      username: string;
+      password: string;
+      display_name: string;
+      full_name: string;
+    };
+
     try {
-      const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
-      if (existing.length > 0) return res.status(409).json({ error: 'Email already registered' });
+      const existingEmail = await sql`SELECT id FROM users WHERE email = ${email}`;
+      if (existingEmail.length > 0) return res.status(409).json({ error: 'Email already registered' });
+
+      const existingUsername = await sql`SELECT id FROM users WHERE username = ${username}`;
+      if (existingUsername.length > 0) return res.status(409).json({ error: 'Username already taken' });
 
       const passwordHash = await bcrypt.hash(password, 12);
-      const secret = speakeasy.generateSecret({ name: `MedGoBag (${email})`, length: 20 });
+      const secret = speakeasy.generateSecret({ name: `MedGoBag (${username})`, length: 20 });
 
       const [user] = (await sql`
-        INSERT INTO users (email, password_hash, otp_secret)
-        VALUES (${email}, ${passwordHash}, ${secret.base32})
-        RETURNING id, email, role
-      `) as { id: number; email: string; role: string }[];
+        INSERT INTO users (email, username, display_name, full_name, password_hash, otp_secret)
+        VALUES (${email}, ${username}, ${display_name}, ${full_name}, ${passwordHash}, ${secret.base32})
+        RETURNING id, email, username, role
+      `) as { id: number; email: string; username: string; role: string }[];
 
-      // Short-lived token only valid for OTP setup (not full app access)
       const setupToken = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET!,
@@ -51,7 +65,6 @@ router.post(
 );
 
 // ─── Verify OTP setup ─────────────────────────────────────────────────────────
-// Called after scanning QR code. Requires the setupToken from /register.
 router.post('/verify-otp-setup', requireAuth, async (req, res) => {
   const { token } = req.body as { token: string };
   try {
@@ -78,11 +91,11 @@ router.post('/verify-otp-setup', requireAuth, async (req, res) => {
   }
 });
 
-// ─── Login ────────────────────────────────────────────────────────────────────
+// ─── Login (by username) ──────────────────────────────────────────────────────
 router.post(
   '/login',
   [
-    body('email').isEmail().normalizeEmail(),
+    body('username').trim().notEmpty().withMessage('Username is required'),
     body('password').notEmpty(),
     body('token').notEmpty().withMessage('OTP token is required'),
   ],
@@ -90,16 +103,16 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, token } = req.body as {
-      email: string;
+    const { username, password, token } = req.body as {
+      username: string;
       password: string;
       token: string;
     };
 
     try {
       const [user] = (await sql`
-        SELECT id, email, password_hash, role, otp_secret, otp_enabled, is_active
-        FROM users WHERE email = ${email}
+        SELECT id, email, username, display_name, password_hash, role, otp_secret, otp_enabled, is_active
+        FROM users WHERE username = ${username}
       `) as DbUser[];
 
       if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -124,7 +137,13 @@ router.post(
         { expiresIn: '24h' }
       );
 
-      return res.json({ token: jwtToken, role: user.role, email: user.email });
+      return res.json({
+        token: jwtToken,
+        role: user.role,
+        email: user.email,
+        username: user.username,
+        displayName: user.display_name,
+      });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: 'Server error' });
@@ -136,7 +155,7 @@ router.post(
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const [user] = await sql`
-      SELECT id, email, role, is_active, otp_enabled, created_at
+      SELECT id, email, username, display_name, full_name, role, is_active, otp_enabled, created_at
       FROM users WHERE id = ${req.user!.userId}
     `;
     if (!user) return res.status(404).json({ error: 'User not found' });

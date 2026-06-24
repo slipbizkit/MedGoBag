@@ -10,7 +10,7 @@ interface Props {
 export default function Navbar({ theme, toggleTheme, onLogout }: Props) {
   const navigate = useNavigate();
   const role = localStorage.getItem('role');
-  const email = localStorage.getItem('email');
+  const displayName = localStorage.getItem('displayName') || localStorage.getItem('username');
 
   async function handleLogout() {
     const result = await Swal.fire({
@@ -64,7 +64,7 @@ export default function Navbar({ theme, toggleTheme, onLogout }: Props) {
           </ul>
 
           <div className="d-flex align-items-center gap-2">
-            <span className="navbar-text text-white-50 small d-none d-lg-inline">{email}</span>
+            <span className="navbar-text text-white-50 small d-none d-lg-inline">{displayName}</span>
             <button
               className="btn btn-outline-light btn-sm"
               onClick={toggleTheme}

@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const email = localStorage.getItem('email');
+  const displayName = localStorage.getItem('displayName') || localStorage.getItem('username') || localStorage.getItem('email');
 
   useEffect(() => {
     client
@@ -36,7 +36,7 @@ export default function Dashboard() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h4 className="mb-0">Dashboard</h4>
-          <p className="text-muted small mb-0">Welcome back, {email}</p>
+          <p className="text-muted small mb-0">Welcome back, {displayName}!</p>
         </div>
         <Link to="/medicines" className="btn btn-primary btn-sm">
           + Add Medicine
