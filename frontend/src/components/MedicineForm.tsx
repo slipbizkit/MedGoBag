@@ -8,7 +8,8 @@ interface Props {
 }
 
 const empty = {
-  name: '',
+  generic_name: '',
+  brand_name: '',
   expiration_date: '',
   production_date: '',
   used_for: '',
@@ -24,7 +25,8 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
   useEffect(() => {
     if (initial) {
       setForm({
-        name: initial.name,
+        generic_name: initial.generic_name,
+        brand_name: initial.brand_name ?? '',
         expiration_date: initial.expiration_date.slice(0, 10),
         production_date: initial.production_date?.slice(0, 10) ?? '',
         used_for: initial.used_for,
@@ -47,7 +49,8 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
     setSaving(true);
     try {
       await onSave({
-        name: form.name,
+        generic_name: form.generic_name,
+        brand_name: form.brand_name || null,
         expiration_date: form.expiration_date,
         production_date: form.production_date || null,
         used_for: form.used_for,
@@ -71,9 +74,25 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
       <div className="row g-3">
         <div className="col-12 col-sm-6">
           <label className="form-label fw-semibold">
-            Name <span className="text-danger">*</span>
+            Generic Name <span className="text-danger">*</span>
           </label>
-          <input className="form-control" value={form.name} onChange={set('name')} required />
+          <input
+            className="form-control"
+            value={form.generic_name}
+            onChange={set('generic_name')}
+            placeholder="e.g. Paracetamol"
+            required
+          />
+        </div>
+
+        <div className="col-12 col-sm-6">
+          <label className="form-label fw-semibold">Brand Name</label>
+          <input
+            className="form-control"
+            value={form.brand_name}
+            onChange={set('brand_name')}
+            placeholder="e.g. Biogesic"
+          />
         </div>
 
         <div className="col-12 col-sm-6">
@@ -89,7 +108,7 @@ export default function MedicineForm({ initial, onSave, onCancel }: Props) {
           />
         </div>
 
-        <div className="col-12">
+        <div className="col-12 col-sm-6">
           <label className="form-label fw-semibold">
             Used For <span className="text-danger">*</span>
           </label>

@@ -38,10 +38,11 @@ router.get('/expiring', async (req, res) => {
 });
 
 const medicineValidation = [
-  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('generic_name').trim().notEmpty().withMessage('Generic name is required'),
   body('expiration_date').isISO8601().withMessage('Valid expiration date is required'),
   body('used_for').trim().notEmpty().withMessage('Used For is required'),
   body('dosage').trim().notEmpty().withMessage('Dosage is required'),
+  body('brand_name').optional({ nullable: true }).trim(),
   body('production_date').optional({ nullable: true }).isISO8601(),
   body('description').optional({ nullable: true }).trim(),
 ];
@@ -51,13 +52,14 @@ router.post('/', medicineValidation, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { name, expiration_date, production_date, used_for, dosage, description } = req.body;
+  const { generic_name, brand_name, expiration_date, production_date, used_for, dosage, description } = req.body;
   try {
     const [medicine] = await sql`
-      INSERT INTO medicines (user_id, name, expiration_date, production_date, used_for, dosage, description)
+      INSERT INTO medicines (user_id, generic_name, brand_name, expiration_date, production_date, used_for, dosage, description)
       VALUES (
         ${req.user!.userId},
-        ${name},
+        ${generic_name},
+        ${brand_name ?? null},
         ${expiration_date},
         ${production_date ?? null},
         ${used_for},
@@ -78,17 +80,18 @@ router.put('/:id', medicineValidation, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { name, expiration_date, production_date, used_for, dosage, description } = req.body;
+  const { generic_name, brand_name, expiration_date, production_date, used_for, dosage, description } = req.body;
   try {
     const [medicine] = await sql`
       UPDATE medicines
-      SET name            = ${name},
-          expiration_date = ${expiration_date},
-          production_date = ${production_date ?? null},
-          used_for        = ${used_for},
-          dosage          = ${dosage},
-          description     = ${description ?? null},
-          updated_at      = NOW()
+      SET generic_name     = ${generic_name},
+          brand_name       = ${brand_name ?? null},
+          expiration_date  = ${expiration_date},
+          production_date  = ${production_date ?? null},
+          used_for         = ${used_for},
+          dosage           = ${dosage},
+          description      = ${description ?? null},
+          updated_at       = NOW()
       WHERE id = ${req.params.id} AND user_id = ${req.user!.userId}
       RETURNING *
     `;

@@ -18,7 +18,8 @@ export interface DbUser {
 export interface DbMedicine {
   id: number;
   user_id: number;
-  name: string;
+  generic_name: string;
+  brand_name: string | null;
   expiration_date: string;
   production_date: string | null;
   used_for: string;

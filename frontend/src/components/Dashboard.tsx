@@ -75,7 +75,12 @@ export default function Dashboard() {
             <div key={med.id} className="col-12 col-md-6 col-xl-4">
               <div className={`card border-${badge} h-100`}>
                 <div className={`card-header bg-${badge} bg-opacity-10 d-flex justify-content-between align-items-center`}>
-                  <strong className="text-truncate">{med.name}</strong>
+                  <div className="text-truncate">
+                    <strong>{med.generic_name}</strong>
+                    {med.brand_name && (
+                      <span className="text-muted small ms-1">({med.brand_name})</span>
+                    )}
+                  </div>
                   <span className={`badge bg-${badge} ms-2 flex-shrink-0`}>
                     {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? 'Expires today' : `${days}d left`}
                   </span>

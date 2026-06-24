@@ -43,7 +43,7 @@ export default function MedicineList() {
   async function handleDelete(med: Medicine) {
     const result = await Swal.fire({
       title: 'Delete medicine?',
-      text: `"${med.name}" will be permanently removed.`,
+      text: `"${med.generic_name}" will be permanently removed.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
@@ -80,9 +80,14 @@ export default function MedicineList() {
       : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${days}d left)</span>`;
 
     Swal.fire({
-      title: med.name,
+      title: med.generic_name,
       html: `
         <table style="width:100%;text-align:left;border-collapse:collapse;font-size:0.95rem;">
+          ${med.brand_name ? `
+          <tr>
+            <td style="padding:6px 0;color:#6c757d;white-space:nowrap;width:40%;">Brand Name</td>
+            <td style="padding:6px 0;font-weight:500;">${med.brand_name}</td>
+          </tr>` : ''}
           <tr>
             <td style="padding:6px 0;color:#6c757d;white-space:nowrap;width:40%;">Dosage</td>
             <td style="padding:6px 0;font-weight:500;">${med.dosage}</td>
@@ -130,7 +135,8 @@ export default function MedicineList() {
 
   const filtered = medicines.filter(
     (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.generic_name.toLowerCase().includes(search.toLowerCase()) ||
+      (m.brand_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
       m.used_for.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -182,7 +188,8 @@ export default function MedicineList() {
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>
-                <th>Name</th>
+                <th>Generic Name</th>
+                <th>Brand Name</th>
                 <th>Expires</th>
                 <th className="d-none d-md-table-cell">Used For</th>
                 <th className="d-none d-md-table-cell">Dosage</th>
@@ -196,7 +203,8 @@ export default function MedicineList() {
                 const expired = exp < new Date();
                 return (
                   <tr key={med.id}>
-                    <td className="fw-semibold">{med.name}</td>
+                    <td className="fw-semibold">{med.generic_name}</td>
+                    <td className="text-muted">{med.brand_name ?? <span className="text-muted fst-italic small">—</span>}</td>
                     <td>
                       <span className={`badge ${expired ? 'bg-danger' : soon ? 'bg-warning text-dark' : 'bg-success'}`}>
                         {exp.toLocaleDateString()}
