@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
@@ -16,7 +16,7 @@ const router = Router();
 router.post(
   '/register',
   [body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 8 })],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -86,7 +86,7 @@ router.post(
     body('password').notEmpty(),
     body('token').notEmpty().withMessage('OTP token is required'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
