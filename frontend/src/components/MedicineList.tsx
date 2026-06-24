@@ -65,6 +65,16 @@ export default function MedicineList() {
     }
   }
 
+  function fmtDays(n: number): string {
+    if (n <= 0) return '0d';
+    const y = Math.floor(n / 365);
+    const rem = n - y * 365;
+    const mo = Math.floor(rem / 30);
+    const d = rem - mo * 30;
+    return [y > 0 && `${y}y`, mo > 0 && `${mo}m`, (d > 0 || (!y && !mo)) && `${d}d`]
+      .filter(Boolean).join(' ');
+  }
+
   function handleView(med: Medicine) {
     const exp = new Date(med.expiration_date);
     const now = new Date();
@@ -72,12 +82,12 @@ export default function MedicineList() {
     const days = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const expired = days < 0;
     const expiryLabel = expired
-      ? `<span style="color:#dc3545;font-weight:600;">Expired ${Math.abs(days)}d ago (${exp.toLocaleDateString()})</span>`
+      ? `<span style="color:#dc3545;font-weight:600;">Expired ${fmtDays(Math.abs(days))} ago (${exp.toLocaleDateString()})</span>`
       : days === 0
       ? `<span style="color:#dc3545;font-weight:600;">Expires today</span>`
       : days <= 30
-      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${days}d left)</span>`
-      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${days}d left)</span>`;
+      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${fmtDays(days)} left)</span>`
+      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${fmtDays(days)} left)</span>`;
 
     Swal.fire({
       title: med.generic_name,
