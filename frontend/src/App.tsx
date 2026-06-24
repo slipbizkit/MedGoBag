@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import MedicineList from './components/MedicineList';
 import AdminPanel from './components/AdminPanel';
 import Navbar from './components/Navbar';
+import { useTheme } from './hooks/useTheme';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   return localStorage.getItem('token') ? <>{children}</> : <Navigate to="/login" replace />;
@@ -18,14 +19,15 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const isLoggedIn = Boolean(localStorage.getItem('token'));
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <BrowserRouter>
-      {isLoggedIn && <Navbar />}
+      {isLoggedIn && <Navbar theme={theme} toggleTheme={toggleTheme} />}
       <div className="container-lg py-3">
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/register" element={<Register theme={theme} toggleTheme={toggleTheme} />} />
           <Route
             path="/otp-setup"
             element={

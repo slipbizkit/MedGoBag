@@ -2,7 +2,12 @@ import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import client from '../api/client';
 
-export default function Register() {
+interface Props {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+export default function Register({ theme, toggleTheme }: Props) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,6 +49,14 @@ export default function Register() {
 
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+      <button
+        className="btn btn-outline-secondary btn-sm position-fixed top-0 end-0 m-3"
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
       <div className="card shadow-sm w-100" style={{ maxWidth: 420 }}>
         <div className="card-body p-4">
           <h4 className="card-title text-center text-primary mb-1">💊 MedGoBag</h4>
