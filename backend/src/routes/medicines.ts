@@ -27,7 +27,6 @@ router.get('/expiring', async (req, res) => {
     const medicines = await sql`
       SELECT * FROM medicines
       WHERE user_id = ${req.user!.userId}
-        AND expiration_date >= CURRENT_DATE
         AND expiration_date <= CURRENT_DATE + INTERVAL '3 months'
       ORDER BY expiration_date ASC
     `;

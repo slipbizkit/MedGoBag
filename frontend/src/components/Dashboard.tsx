@@ -11,6 +11,7 @@ function daysUntil(dateStr: string): number {
 }
 
 function urgencyClass(days: number): string {
+  if (days <= 0) return 'danger';
   if (days <= 14) return 'danger';
   if (days <= 30) return 'warning';
   return 'info';
@@ -45,7 +46,7 @@ export default function Dashboard() {
       <div className="alert alert-warning d-flex align-items-center gap-2 py-2" role="alert">
         <span>⚠️</span>
         <span className="small">
-          Showing medicines expiring within the next <strong>3 months</strong>.
+          Showing medicines <strong>already expired</strong> or expiring within the next <strong>3 months</strong>.
         </span>
       </div>
 
@@ -76,7 +77,7 @@ export default function Dashboard() {
                 <div className={`card-header bg-${badge} bg-opacity-10 d-flex justify-content-between align-items-center`}>
                   <strong className="text-truncate">{med.name}</strong>
                   <span className={`badge bg-${badge} ms-2 flex-shrink-0`}>
-                    {days <= 0 ? 'Expired' : `${days}d left`}
+                    {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? 'Expires today' : `${days}d left`}
                   </span>
                 </div>
                 <div className="card-body small">
