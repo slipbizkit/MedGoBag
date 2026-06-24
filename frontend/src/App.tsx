@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -18,15 +19,26 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const isLoggedIn = Boolean(localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('token')));
   const { theme, toggleTheme } = useTheme();
+
+  function handleLogout() {
+    localStorage.clear();
+    setIsLoggedIn(false);
+  }
+
+  function handleLogin() {
+    setIsLoggedIn(true);
+  }
 
   return (
     <BrowserRouter>
-      {isLoggedIn && <Navbar theme={theme} toggleTheme={toggleTheme} />}
+      {isLoggedIn && (
+        <Navbar theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />
+      )}
       <div className="container-lg py-3">
         <Routes>
-          <Route path="/login" element={<Login theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/login" element={<Login theme={theme} toggleTheme={toggleTheme} onLogin={handleLogin} />} />
           <Route path="/register" element={<Register theme={theme} toggleTheme={toggleTheme} />} />
           <Route
             path="/otp-setup"

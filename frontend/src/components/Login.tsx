@@ -5,9 +5,10 @@ import client from '../api/client';
 interface Props {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  onLogin: () => void;
 }
 
-export default function Login({ theme, toggleTheme }: Props) {
+export default function Login({ theme, toggleTheme, onLogin }: Props) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +25,7 @@ export default function Login({ theme, toggleTheme }: Props) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
       localStorage.setItem('email', data.email);
+      onLogin();
       navigate('/');
     } catch (err: unknown) {
       const msg =

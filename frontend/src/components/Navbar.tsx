@@ -1,17 +1,31 @@
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 interface Props {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  onLogout: () => void;
 }
 
-export default function Navbar({ theme, toggleTheme }: Props) {
+export default function Navbar({ theme, toggleTheme, onLogout }: Props) {
   const navigate = useNavigate();
   const role = localStorage.getItem('role');
   const email = localStorage.getItem('email');
 
-  function handleLogout() {
-    localStorage.clear();
+  async function handleLogout() {
+    const result = await Swal.fire({
+      title: 'Log out?',
+      text: 'Are you sure you want to log out?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, log out',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+    onLogout();
     navigate('/login');
   }
 
@@ -51,7 +65,6 @@ export default function Navbar({ theme, toggleTheme }: Props) {
 
           <div className="d-flex align-items-center gap-2">
             <span className="navbar-text text-white-50 small d-none d-lg-inline">{email}</span>
-
             <button
               className="btn btn-outline-light btn-sm"
               onClick={toggleTheme}
@@ -60,7 +73,6 @@ export default function Navbar({ theme, toggleTheme }: Props) {
             >
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-
             <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
               Logout
             </button>
