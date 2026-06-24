@@ -190,7 +190,7 @@ export default function MedicineList() {
               <tr>
                 <th>Brand Name</th>
                 <th>Generic Name</th>
-                <th>Expires</th>
+                <th>Expires In</th>
                 <th className="d-none d-md-table-cell">Used For</th>
                 <th className="d-none d-md-table-cell">Dosage</th>
                 <th></th>

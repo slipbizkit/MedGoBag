@@ -1,0 +1,122 @@
+/* ── Theme transition ───────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    box-shadow       0.25s ease;
+}
+
+/* Don't animate things that shouldn't slide around */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, box-shadow, color;
+}
+
+/* ── Light mode ─────────────────────────────────────────────────────────────── */
+[data-bs-theme="light"] body {
+  background:
+    radial-gradient(ellipse at 20% 0%,  rgba(99, 149, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #f0f4ff 0%, #f8faff 50%, #eef2ff 100%);
+  min-height: 100vh;
+}
+
+[data-bs-theme="light"] .card {
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2px 12px rgba(80, 120, 240, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .table {
+  --bs-table-bg: transparent;
+}
+
+[data-bs-theme="light"] .navbar.bg-primary {
+  background: linear-gradient(90deg, #1a56db 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 2px 12px rgba(29, 78, 216, 0.25);
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] body {
+  background:
+    radial-gradient(ellipse at 15% 0%,  rgba(56, 100, 200, 0.15) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(109, 40, 217, 0.10) 0%, transparent 55%),
+    linear-gradient(180deg, #080e1c 0%, #0d1526 50%, #080c1a 100%);
+  min-height: 100vh;
+}
+
+[data-bs-theme="dark"] .card {
+  background-color: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .table {
+  --bs-table-bg: transparent;
+}
+
+[data-bs-theme="dark"] .table-light {
+  --bs-table-bg: rgba(255, 255, 255, 0.04);
+  --bs-table-color: #d1d5db;
+}
+
+[data-bs-theme="dark"] .navbar.bg-primary {
+  background: linear-gradient(90deg, #0f2460 0%, #1a3a8f 100%) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: #e5e7eb;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+[data-bs-theme="dark"] .dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #1f2937;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f3f4f6;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: #1f2937;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+  color: #f3f4f6;
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+  color: #6b7280;
+}
+
+[data-bs-theme="dark"] .alert-warning {
+  background-color: rgba(217, 119, 6, 0.15);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #fcd34d;
+}
+
+[data-bs-theme="dark"] .alert-danger {
+  background-color: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
+[data-bs-theme="dark"] .badge.bg-warning {
+  color: #111 !important;
+}
