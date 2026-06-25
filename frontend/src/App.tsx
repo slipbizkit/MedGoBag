@@ -6,7 +6,7 @@ import OTPSetup from './components/OTPSetup';
 import Dashboard from './components/Dashboard';
 import MedicineList from './components/MedicineList';
 import AdminPanel from './components/AdminPanel';
-import Navbar from './components/Navbar';
+import Layout from './components/Layout';
 import { useTheme } from './hooks/useTheme';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -33,48 +33,53 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {isLoggedIn && (
-        <Navbar theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />
-      )}
-      <div className="container-lg py-3">
-        <Routes>
-          <Route path="/login" element={<Login theme={theme} toggleTheme={toggleTheme} onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register theme={theme} toggleTheme={toggleTheme} />} />
-          <Route
-            path="/otp-setup"
-            element={
-              <RequireAuth>
-                <OTPSetup />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
+      <Routes>
+        {/* ── Public routes ── */}
+        <Route path="/login"    element={<Login    theme={theme} toggleTheme={toggleTheme} onLogin={handleLogin} />} />
+        <Route path="/register" element={<Register theme={theme} toggleTheme={toggleTheme} />} />
+        <Route
+          path="/otp-setup"
+          element={
+            <RequireAuth>
+              <OTPSetup />
+            </RequireAuth>
+          }
+        />
+
+        {/* ── Authenticated routes — wrapped in sidebar layout ── */}
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Layout theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout}>
                 <Dashboard />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/medicines"
-            element={
-              <RequireAuth>
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/medicines"
+          element={
+            <RequireAuth>
+              <Layout theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout}>
                 <MedicineList />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <RequireAdmin>
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <Layout theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout}>
                 <AdminPanel />
-              </RequireAdmin>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+              </Layout>
+            </RequireAdmin>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
