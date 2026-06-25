@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Sidebar from './Sidebar';
+import PageHeader from './PageHeader';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -14,17 +15,19 @@ export default function Layout({ theme, toggleTheme, onLogout, children }: Props
   return (
     <div className="app-layout">
       <Sidebar
-        theme={theme}
-        toggleTheme={toggleTheme}
         onLogout={onLogout}
         collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed((c) => !c)}
       />
-      <main className={`app-main${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <div className={`app-main${collapsed ? ' sidebar-collapsed' : ''}`}>
+        <PageHeader
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onToggleSidebar={() => setCollapsed((c) => !c)}
+        />
         <div className="app-content">
           {children}
         </div>
-      </main>
+      </div>
     </div>
   );
 }
