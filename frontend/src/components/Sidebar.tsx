@@ -53,8 +53,8 @@ export default function Sidebar({ onLogout, collapsed }: Props) {
       text: 'Are you sure you want to log out?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#e53e3e',
-      cancelButtonColor: '#4a5568',
+      confirmButtonColor: '#B3472B',
+      cancelButtonColor: '#5C6B60',
       confirmButtonText: 'Yes, log out',
     });
     if (!result.isConfirmed) return;

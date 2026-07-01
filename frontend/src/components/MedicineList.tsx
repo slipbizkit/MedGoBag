@@ -46,8 +46,8 @@ export default function MedicineList() {
       text: `"${med.generic_name}" will be permanently removed.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
+      confirmButtonColor: '#B3472B',
+      cancelButtonColor: '#5C6B60',
       confirmButtonText: 'Yes, delete it',
       cancelButtonText: 'Cancel',
     });
@@ -90,15 +90,16 @@ export default function MedicineList() {
     const diff = expired ? calendarDiff(exp, now) : calendarDiff(now, exp);
     const duration = fmtDiff(diff.years, diff.months, diff.days);
     const expiryLabel = expired
-      ? `<span style="color:#dc3545;font-weight:600;">Expired ${duration} ago (${exp.toLocaleDateString()})</span>`
+      ? `<span class="font-mono" style="color:#B3472B;font-weight:600;">Expired ${duration} ago (${exp.toLocaleDateString()})</span>`
       : totalDays === 0
-      ? `<span style="color:#dc3545;font-weight:600;">Expires today</span>`
+      ? `<span class="font-mono" style="color:#B3472B;font-weight:600;">Expires today</span>`
       : totalDays <= 30
-      ? `<span style="color:#fd7e14;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`
-      : `<span style="color:#198754;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`;
+      ? `<span class="font-mono" style="color:#7A4C0F;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`
+      : `<span class="font-mono" style="color:#2F4A35;font-weight:600;">${exp.toLocaleDateString()} (${duration} left)</span>`;
 
     Swal.fire({
       title: med.generic_name,
+      customClass: { title: 'font-display' },
       html: `
         <table style="width:100%;text-align:left;border-collapse:collapse;font-size:0.95rem;">
           ${med.brand_name ? `
@@ -108,7 +109,7 @@ export default function MedicineList() {
           </tr>` : ''}
           <tr>
             <td style="padding:6px 0;color:#6c757d;white-space:nowrap;width:40%;">Dosage</td>
-            <td style="padding:6px 0;font-weight:500;">${med.dosage}</td>
+            <td class="font-mono" style="padding:6px 0;font-weight:500;">${med.dosage}</td>
           </tr>
           <tr>
             <td style="padding:6px 0;color:#6c757d;">Used For</td>
@@ -121,7 +122,7 @@ export default function MedicineList() {
           ${med.production_date ? `
           <tr>
             <td style="padding:6px 0;color:#6c757d;">Produced</td>
-            <td style="padding:6px 0;font-weight:500;">${new Date(med.production_date).toLocaleDateString()}</td>
+            <td class="font-mono" style="padding:6px 0;font-weight:500;">${new Date(med.production_date).toLocaleDateString()}</td>
           </tr>` : ''}
           ${med.description ? `
           <tr>
@@ -132,7 +133,7 @@ export default function MedicineList() {
       `,
       icon: expired ? 'warning' : 'info',
       confirmButtonText: 'Close',
-      confirmButtonColor: '#0d6efd',
+      confirmButtonColor: '#1F2A24',
     });
   }
 
@@ -161,7 +162,7 @@ export default function MedicineList() {
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 className="mb-0">My Medicines</h4>
+        <h4 className="font-display mb-0">My Medicines</h4>
         {!showForm && (
           <button className="btn btn-primary btn-sm" onClick={startAdd}>
             + Add Medicine
@@ -219,19 +220,20 @@ export default function MedicineList() {
                 const exp = new Date(med.expiration_date);
                 const soon = exp <= new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
                 const expired = exp < new Date();
+                const tone = expired ? 'clay' : soon ? 'amber' : 'sage';
                 return (
                   <tr key={med.id}>
-                    <td className="fw-semibold">{med.brand_name ?? <span className="text-muted fst-italic small">—</span>}</td>
+                    <td className="fw-semibold font-display">{med.brand_name ?? <span className="text-muted fst-italic small">—</span>}</td>
                     <td className="text-muted">{med.generic_name}</td>
                     <td>
-                      <span className={`badge ${expired ? 'bg-danger' : soon ? 'bg-warning text-dark' : 'bg-success'}`}>
+                      <span className={`label-pill label-pill-${tone}`}>
                         {exp.toLocaleDateString()}
                       </span>
                     </td>
                     <td className="d-none d-md-table-cell text-truncate" style={{ maxWidth: 200 }}>
                       {med.used_for}
                     </td>
-                    <td className="d-none d-md-table-cell">{med.dosage}</td>
+                    <td className="d-none d-md-table-cell font-mono">{med.dosage}</td>
                     <td className="text-end">
                       <div className="dropdown">
                         <button
