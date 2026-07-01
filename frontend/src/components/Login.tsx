@@ -1,6 +1,7 @@
 import { useState, useRef, FormEvent, KeyboardEvent, ClipboardEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import client from '../api/client';
+import Logo from './Logo';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -141,7 +142,10 @@ export default function Login({ theme, toggleTheme, onLogin }: Props) {
 
       <div className="card shadow-sm w-100" style={{ maxWidth: 420, overflow: 'hidden' }}>
         <div className="card-body p-4">
-          <h4 className="card-title text-center text-primary mb-1">💊 MedGoBag</h4>
+          <div className="d-flex justify-content-center align-items-center gap-2 mb-1">
+            <Logo size={32} />
+            <h4 className="card-title text-primary mb-0">MedGoBag</h4>
+          </div>
 
           {error && (
             <div className="alert alert-danger py-2 small mt-3 mb-0" role="alert">{error}</div>

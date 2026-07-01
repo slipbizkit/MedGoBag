@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import client from '../api/client';
 import { useAvailability, AvailabilityStatus } from '../hooks/useAvailability';
+import Logo from './Logo';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -108,7 +109,10 @@ export default function Register({ theme, toggleTheme }: Props) {
 
       <div className="card shadow-sm w-100" style={{ maxWidth: 480 }}>
         <div className="card-body p-4">
-          <h4 className="card-title text-center text-primary mb-1">💊 MedGoBag</h4>
+          <div className="d-flex justify-content-center align-items-center gap-2 mb-1">
+            <Logo size={32} />
+            <h4 className="card-title text-primary mb-0">MedGoBag</h4>
+          </div>
           <p className="text-center text-muted small mb-4">Create an account</p>
 
           {error && (
